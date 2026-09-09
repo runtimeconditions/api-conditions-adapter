@@ -1,0 +1,36 @@
+{
+  "items": [
+    {
+      "cluster": { "name": "rc-cilium" },
+      "resources": [
+        {
+          "type": "pods",
+          "resources": [
+            {
+              "metadata": {
+                "name": "inventory-service-866497bb6b-zhs4r",
+                "namespace": "applications",
+                "labels": { "backstage.io/kubernetes-id": "inventory-service" }
+              }
+            }
+          ]
+        },
+        {
+          "type": "services",
+          "resources": [
+            {
+              "metadata": {
+                "name": "stock-provider-v2",
+                "namespace": "applications",
+                "labels": { "backstage.io/kubernetes-id": "inventory-service" }
+              },
+              "spec": {
+                "ports": [{ "port": 8080, "targetPort": "http" }]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+[
+  {
+    "metadata": { "name": "inventory-api" },
+    "kind": "API",
+    "spec": {
+      "type": "openapi",
+      "definition": "openapi: 3.0.3\ninfo:\n  title: Inventory API\n  version: 1.0.0\npaths:\n  /items/{itemId}/availability:\n    get:\n      operationId: getItemAvailability\n      responses:\n        \"200\":\n          description: Current available quantity\n  /reservations:\n    post:\n      operationId: createReservation\n      responses:\n        \"201\":\n          description: Reservation created\n  /admin/items:\n    post:\n      operationId: createInventoryItem\n      responses:\n        \"201\":\n          description: Item created\n"
+    },
+    "relations": [
+      { "type": "apiProvidedBy", "targetRef": "component:default/inventory-service" }
+    ]
+  },
+  {
+    "metadata": { "name": "fulfillment-api" },
+    "kind": "API",
+    "spec": {
+      "type": "openapi",
+      "definition": "openapi: 3.0.3\ninfo:\n  title: Fulfillment API\n  version: 1.0.0\npaths:\n  /fulfillment-tasks:\n    post:\n      operationId: createFulfillmentTask\n      responses:\n        \"201\":\n          description: Task created\n  /fulfillment-tasks/{taskId}:\n    get:\n      operationId: getFulfillmentTask\n      responses:\n        \"200\":\n          description: Task state\n"
+    },
+    "relations": [
+      { "type": "apiProvidedBy", "targetRef": "component:default/fulfillment-service" }
+    ]
+  },
+  {
+    "metadata": { "name": "donor-directory-api" },
+    "kind": "API",
+    "spec": {
+      "type": "openapi",
+      "definition": "openapi: 3.0.3\ninfo:\n  title: Donor Directory API\n  version: 1.0.0\npaths:\n  /donors/{donorId}:\n    get:\n      operationId: getDonor\n      responses:\n        \"200\":\n          description: Donor record\n  /donors/search:\n    post:\n      operationId: searchDonors\n      responses:\n        \"200\":\n          description: Matching donors\n"
+    },
+    "relations": [
+      { "type": "apiProvidedBy", "targetRef": "component:default/donor-directory" }
+    ]
+  }
+]

@@ -1,0 +1,36 @@
+{
+  "items": [
+    {
+      "cluster": { "name": "rc-cilium" },
+      "resources": [
+        {
+          "type": "pods",
+          "resources": [
+            {
+              "metadata": {
+                "name": "fulfillment-service-59db6fd68-76tpm",
+                "namespace": "applications",
+                "labels": { "backstage.io/kubernetes-id": "fulfillment-service" }
+              }
+            }
+          ]
+        },
+        {
+          "type": "services",
+          "resources": [
+            {
+              "metadata": {
+                "name": "dispatch-planner-v1",
+                "namespace": "applications",
+                "labels": { "backstage.io/kubernetes-id": "fulfillment-service" }
+              },
+              "spec": {
+                "ports": [{ "port": 8080, "targetPort": "http" }]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
