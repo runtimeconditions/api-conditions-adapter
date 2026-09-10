@@ -18,8 +18,10 @@ service that provides it via the Backstage catalog and Kubernetes integration, a
 5. Resolve that component to its real Kubernetes Service via
    `POST /api/kubernetes/resources/workloads/query`. The Kubernetes Service name is not
    guaranteed to match the Backstage component name, so this lookup is required.
-6. Emit a `CiliumNetworkPolicy` allowing the source component to reach each resolved
-   destination Service, and nothing else.
+6. Resolve the profiled service itself the same way, using its actual pod label rather than
+   assuming it matches the profile name.
+7. Emit a `CiliumNetworkPolicy` allowing the source component to reach each resolved
+   destination Service on the matched HTTP methods and paths, and nothing else.
 
 This tool only generates policy YAML. It does not apply anything to a cluster and does not
 run on any kind of trigger or schedule; that is a deliberate next step, not part of this repo yet.
@@ -45,6 +47,8 @@ Options:
 
 - `--backstage-url` (default `http://localhost:7007`)
 - `--namespace` (default `applications`) sets the namespace of the generated policy
+- `--source-ref` overrides the Backstage entityRef used for the profiled service, defaults to
+  `component:default/<profile name>`
 - `-o/--output` writes the policy to a file instead of stdout
 
 ## Testing

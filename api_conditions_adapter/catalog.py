@@ -3,18 +3,24 @@ import re
 import requests
 import yaml
 
-HTTP_METHODS = {"GET", "POST", "PUT", "PATCH", "DELETE"}
+HTTP_METHODS = {"GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "TRACE"}
 
 
 def fetch_api_entities(backstage_url, session=None):
     session = session or requests
-    resp = session.get(
-        f"{backstage_url}/api/catalog/entities/by-query",
-        params={"filter": "kind=API"},
-        timeout=10,
-    )
-    resp.raise_for_status()
-    return resp.json()["items"]
+    items = []
+    params = {"filter": "kind=API"}
+    while True:
+        resp = session.get(
+            f"{backstage_url}/api/catalog/entities/by-query", params=params, timeout=10
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        items.extend(data["items"])
+        cursor = data.get("pageInfo", {}).get("nextCursor")
+        if not cursor:
+            return items
+        params = {"cursor": cursor}
 
 
 def path_to_pattern(path):
@@ -41,7 +47,7 @@ def matching_entities(condition, api_entities):
         for entity in api_entities:
             for method, pattern in parse_openapi_operations(entity):
                 if method == wanted_method and pattern.match(wanted_path):
-                    matches.append(entity)
+                    matches.append((entity, op))
                     break
     return matches
 
