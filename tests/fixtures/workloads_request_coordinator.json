@@ -1,0 +1,36 @@
+{
+  "items": [
+    {
+      "cluster": { "name": "rc-cilium" },
+      "resources": [
+        {
+          "type": "pods",
+          "resources": [
+            {
+              "metadata": {
+                "name": "request-coordinator-7695bb4b9c-hf6jx",
+                "namespace": "applications",
+                "labels": { "backstage.io/kubernetes-id": "request-coordinator" }
+              }
+            }
+          ]
+        },
+        {
+          "type": "services",
+          "resources": [
+            {
+              "metadata": {
+                "name": "intake-gateway-v1",
+                "namespace": "applications",
+                "labels": { "backstage.io/kubernetes-id": "request-coordinator" }
+              },
+              "spec": {
+                "ports": [{ "port": 8080, "targetPort": "http" }]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
