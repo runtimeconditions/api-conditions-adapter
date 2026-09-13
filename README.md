@@ -23,8 +23,13 @@ service that provides it via the Backstage catalog and Kubernetes integration, a
 7. Emit a `CiliumNetworkPolicy` allowing the source component to reach each resolved
    destination Service on the matched HTTP methods and paths, and nothing else.
 
-This tool only generates policy YAML. It does not apply anything to a cluster and does not
-run on any kind of trigger or schedule; that is a deliberate next step, not part of this repo yet.
+This tool only generates policy YAML, it does not itself apply anything to a cluster or run on
+a trigger. `deploy/promise.yaml` wires it into that trigger using
+[Kratix](https://kratix.io): it wraps Sumit's `RuntimeConditionsProfile` CRD
+(from [runtime-conditions-crd](https://github.com/runtimeconditions/runtime-conditions-crd)) in
+a Promise whose pipeline is this tool's container image. Creating a `RuntimeConditionsProfile`
+resource in a cluster with that Promise installed runs this tool against the real resource and
+applies the resulting `CiliumNetworkPolicy` automatically, see `deploy/README.md`.
 
 ## Installation
 
