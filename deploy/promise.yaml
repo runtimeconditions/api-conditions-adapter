@@ -1,0 +1,196 @@
+apiVersion: platform.kratix.io/v1alpha1
+kind: Promise
+metadata:
+  name: runtime-conditions-profile
+spec:
+  api:
+    apiVersion: apiextensions.k8s.io/v1
+    kind: CustomResourceDefinition
+    metadata:
+      annotations:
+        controller-gen.kubebuilder.io/version: v0.21.0
+      name: runtimeconditionsprofiles.runtimeconditions.io
+    spec:
+      group: runtimeconditions.io
+      names:
+        kind: RuntimeConditionsProfile
+        listKind: RuntimeConditionsProfileList
+        plural: runtimeconditionsprofiles
+        shortNames:
+        - rcp
+        - rcprofile
+        - rcprofiles
+        singular: runtimeconditionsprofile
+      scope: Namespaced
+      versions:
+      - name: v1alpha1
+        schema:
+          openAPIV3Schema:
+            description: 'RuntimeConditionsProfile is the Schema for the runtimeconditionsprofiles
+              API.
+
+
+              Its shape mirrors the Runtime Conditions Profile document directly:
+
+              workload/extensions/conditions are top-level fields, not nested under
+              a
+
+              spec, the same way ConfigMap''s data is top-level.'
+            properties:
+              apiVersion:
+                description: 'APIVersion defines the versioned schema of this representation
+                  of an object.
+
+                  Servers should convert recognized schemas to the latest internal
+                  value, and
+
+                  may reject unrecognized values.
+
+                  More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+                type: string
+              conditions:
+                description: 'conditions is the workload''s external runtime dependencies.
+                  Can be
+
+                  empty.'
+                items:
+                  description: 'Condition is one external runtime dependency a workload
+                    requires.
+
+
+                    name/optional/kind/interface.type are the fields the core spec
+                    reserves,
+
+                    so they''re typed and validated here. Everything extension-defined
+
+                    (additional interface fields, and any extra condition-level fields
+                    an
+
+                    extension''s conditionFields declare) is left schemaless.'
+                  properties:
+                    interface:
+                      description: 'ConditionInterface is the workload-facing interface
+                        requirement for a
+
+                        Condition. `type` is the only field the core spec reserves;
+                        everything
+
+                        else here is extension-defined (operations, engine, etc.),
+                        so we don''t
+
+                        type it - we keep it and let a validating webhook check it
+                        against
+
+                        whatever extension the profile declared.'
+                      properties:
+                        type:
+                          minLength: 1
+                          type: string
+                      required:
+                      - type
+                      type: object
+                      x-kubernetes-preserve-unknown-fields: true
+                    kind:
+                      description: 'kind is the extension-defined integration classification,
+                        e.g.
+
+                        "api", "datastore", "cache". Whether a given value is actually
+
+                        backed by a resolved extension is checked by a webhook, not
+                        here.'
+                      minLength: 1
+                      type: string
+                    name:
+                      description: name is a unique label for this condition within
+                        the profile.
+                      minLength: 1
+                      type: string
+                      maxLength: 256
+                    optional:
+                      default: false
+                      type: boolean
+                  required:
+                  - interface
+                  - kind
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+                type: array
+                x-kubernetes-validations:
+                - message: condition names must be unique within the profile
+                  rule: self.filter(c, has(c.name)).all(c, self.filter(d, has(d.name)
+                    && d.name == c.name).size() == 1)
+                maxItems: 64
+              extensions:
+                description: 'extensions is the list of extension identifiers (absolute
+                  URIs) this
+
+                  profile depends on. Can be empty, can''t have duplicates.'
+                items:
+                  format: uri
+                  type: string
+                  maxLength: 2048
+                type: array
+                x-kubernetes-validations:
+                - message: each extension must have a URI scheme
+                  rule: self.all(e, e.matches('^[A-Za-z][A-Za-z0-9+.-]*:'))
+                - message: extensions must not contain duplicate identifiers
+                  rule: self.all(x, self.exists_one(y, y == x))
+                maxItems: 32
+              kind:
+                description: 'Kind is a string value representing the REST resource
+                  this object represents.
+
+                  Servers may infer this from the endpoint the client submits requests
+                  to.
+
+                  Cannot be updated.
+
+                  In CamelCase.
+
+                  More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                type: string
+              metadata:
+                type: object
+              workload:
+                description: Workload identifies the single application a profile
+                  describes.
+                properties:
+                  uri:
+                    description: uri is a stable identifier for the workload, e.g.
+                      a repo URL.
+                    minLength: 1
+                    type: string
+                  version:
+                    description: version is the workload version this profile was
+                      generated for.
+                    minLength: 1
+                    type: string
+                required:
+                - uri
+                type: object
+            required:
+            - conditions
+            - extensions
+            - metadata
+            - workload
+            type: object
+        served: true
+        storage: true
+  destinationSelectors:
+  - matchLabels:
+      environment: dev
+  workflows:
+    resource:
+      configure:
+      - apiVersion: platform.kratix.io/v1alpha1
+        kind: Pipeline
+        metadata:
+          name: generate-cnp
+          namespace: default
+        spec:
+          containers:
+          - name: generate-cnp
+            image: ghcr.io/magic-peach/api-conditions-adapter:latest
+            env:
+            - name: BACKSTAGE_URL
+              value: http://backstage.backstage.svc.cluster.local:7007
