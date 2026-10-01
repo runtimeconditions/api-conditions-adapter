@@ -1,12 +1,33 @@
 import argparse
 import sys
 
+import requests
 import yaml
 
 from .catalog import fetch_api_entities, matching_entities, provider_ref
 from .policy import build_cnp
 from .profile import api_conditions, load_profile, source_component_name
 from .workloads import extract_selector, extract_service, fetch_workloads
+
+
+def post_fulfillments(backstage_url, profile_name, environment, cnp, conditions, session=None):
+    session = session or requests
+    resource = {
+        "kind": "CiliumNetworkPolicy",
+        "provider": "kubernetes",
+        "reference": f"{cnp['metadata']['namespace']}/{cnp['metadata']['name']}",
+    }
+    for condition in conditions:
+        session.post(
+            f"{backstage_url}/api/runtime-conditions/fulfillments",
+            json={
+                "profileName": profile_name,
+                "condition": condition["name"],
+                "environment": environment,
+                "resources": [resource],
+            },
+            timeout=10,
+        )
 
 
 def resolve_destinations(profile, backstage_url):
@@ -40,6 +61,7 @@ def main(argv=None):
     parser.add_argument("profile_path")
     parser.add_argument("--backstage-url", default="http://localhost:7007")
     parser.add_argument("--namespace", default="applications")
+    parser.add_argument("--environment", default="dev")
     parser.add_argument(
         "--source-ref",
         help="Backstage entityRef for the profiled service, "
@@ -68,6 +90,10 @@ def main(argv=None):
             f.write(rendered)
     else:
         print(rendered)
+
+    post_fulfillments(
+        args.backstage_url, source_component, args.environment, cnp, api_conditions(profile)
+    )
 
     return 0
 
